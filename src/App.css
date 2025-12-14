@@ -1,0 +1,221 @@
+.app {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  box-sizing: border-box;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-new-game {
+  padding: 12px 24px;
+  font-size: 1rem;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-new-game:hover {
+  background-color: #45a049;
+}
+
+.game-board {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 60px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.top-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stock-waste {
+  display: flex;
+  gap: 30px;
+}
+
+.stock,
+.waste {
+  position: relative;
+  width: 80px;
+  height: 120px;
+}
+
+.stock-count {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.foundations {
+  display: flex;
+  gap: 15px;
+}
+
+.foundation {
+  width: 80px;
+  height: 120px;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableau {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex: 1;
+}
+
+.tableau-pile {
+  position: relative;
+  width: 80px;
+  min-height: 120px;
+}
+
+.tableau-empty-slot {
+  width: 80px;
+  height: 120px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.tableau-card {
+  position: absolute;
+  width: 80px;
+}
+
+/* Card styles */
+.card {
+  width: 80px;
+  height: 120px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  user-select: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card-back:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 2px white;
+}
+
+.card-back {
+  background: linear-gradient(135deg, #c41e3a 0%, #a01830 100%);
+  border: 2px solid #8b1538;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2px white;
+}
+
+.card-pattern {
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.1) 10px, rgba(255, 255, 255, 0.1) 20px),
+    repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.15) 10px, rgba(255, 255, 255, 0.15) 20px);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.card-empty {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-face {
+  background-color: white;
+  border: 2px solid #333;
+  position: relative;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.card-face.red {
+  color: #e74c3c;
+}
+
+.card-face.black {
+  color: #000;
+}
+
+.card-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 0.65rem;
+  line-height: 0.8;
+}
+
+.card-corner.top-left {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.card-corner.bottom-right {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  transform: rotate(180deg);
+}
+
+.card-rank {
+  font-weight: bold;
+  font-size: 0.7rem;
+}
+
+.card-suit {
+  font-size: 0.8rem;
+}
+
+.card-center {
+  font-size: 2.5rem;
+  opacity: 0.3;
+}
