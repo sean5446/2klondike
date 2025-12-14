@@ -188,7 +188,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: 5px;
   font-size: 0.65rem;
   line-height: 0.8;
 }
@@ -209,6 +209,10 @@
 .card-rank {
   font-weight: bold;
   font-size: 0.7rem;
+}
+
+.card-rank-large {
+  font-size: 1.5rem;
 }
 
 .card-suit {

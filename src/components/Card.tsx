@@ -37,7 +37,7 @@ const CardComponent: React.FC<CardProps> = ({ card, onClick, faceDown = false, d
   return (
     <div className={`card card-face ${getSuitColor(card.suit)}`} onClick={onClick} draggable={draggable} onDragStart={onDragStart}>
       <div className="card-corner top-left">
-        <div className="card-rank">{card.rank}</div>
+        <div className="card-rank card-rank-large">{card.rank}</div>
         <div className="card-suit">{getSuitSymbol(card.suit)}</div>
       </div>
       <div className="card-center">{getSuitSymbol(card.suit)}</div>
