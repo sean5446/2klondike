@@ -6,36 +6,37 @@ import { getSuitColor, getSuitSymbol } from '../gameLogic';
 interface CardProps {
   card: CardType | null;
   onClick: () => void;
+  onDoubleClick?: () => void;
   faceDown?: boolean;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
 }
 
-const CardComponent: React.FC<CardProps> = ({ card, onClick, faceDown = false, draggable = false, onDragStart }) => {
+const CardComponent: React.FC<CardProps> = ({ card, onClick, onDoubleClick, faceDown = false, draggable = false, onDragStart }) => {
   if (!card) {
     if (faceDown) {
       return (
-        <div className="card card-back" onClick={onClick} draggable={draggable} onDragStart={onDragStart}>
+        <div className="card card-back" onClick={onClick} onDoubleClick={onDoubleClick} draggable={draggable} onDragStart={onDragStart}>
           <div className="card-pattern" />
         </div>
       );
     } else {
       return (
-        <div className="card card-empty" onClick={onClick} draggable={draggable} onDragStart={onDragStart} />
+        <div className="card card-empty" onClick={onClick} onDoubleClick={onDoubleClick} draggable={draggable} onDragStart={onDragStart} />
       );
     }
   }
 
   if (faceDown) {
     return (
-      <div className="card card-back" onClick={onClick} draggable={draggable} onDragStart={onDragStart}>
+      <div className="card card-back" onClick={onClick} onDoubleClick={onDoubleClick} draggable={draggable} onDragStart={onDragStart}>
         <div className="card-pattern" />
       </div>
     );
   }
 
   return (
-    <div className={`card card-face ${getSuitColor(card.suit)}`} onClick={onClick} draggable={draggable} onDragStart={onDragStart}>
+    <div className={`card card-face ${getSuitColor(card.suit)}`} onClick={onClick} onDoubleClick={onDoubleClick} draggable={draggable} onDragStart={onDragStart}>
       <div className="card-corner top-left">
         <div className="card-rank card-rank-large">{card.rank}</div>
         <div className="card-suit-large">{getSuitSymbol(card.suit)}</div>

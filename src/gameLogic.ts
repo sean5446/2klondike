@@ -137,6 +137,13 @@ export const moveCard = (gameState: GameState, fromType: string, fromIndex: numb
       }
       newState.tableau[fromIndex as number] = newPile;
     }
+  } else if (fromType === 'foundation') {
+    const pile = newState.foundations[fromIndex as number];
+    const cardIndex = pile.findIndex(c => c.id === cardId);
+    if (cardIndex !== -1) {
+      cards = pile.slice(cardIndex);
+      newState.foundations[fromIndex as number] = pile.slice(0, cardIndex);
+    }
   }
 
   if (cards.length === 0) return gameState; // Invalid move

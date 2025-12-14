@@ -82,6 +82,20 @@ function App(): React.ReactElement {
     }
   }, [history]);
 
+  const handleDoubleClick = useCallback((card: Card, fromType: string, fromIndex: number | string) => {
+    if (card.rank === 'A') {
+      // Find an empty foundation
+      const emptyFoundationIndex = game.foundations.findIndex(foundation => foundation.length === 0);
+      if (emptyFoundationIndex !== -1) {
+        const newGame = moveCard(game, fromType, fromIndex, 'foundation', emptyFoundationIndex, card.id);
+        if (newGame !== game) {
+          setHistory(prev => [...prev, game]);
+          setGame(newGame);
+        }
+      }
+    }
+  }, [game]);
+
   return (
     <div className="app">
       {isWon && <Confetti />}
@@ -109,6 +123,7 @@ function App(): React.ReactElement {
               <CardComponent 
                 card={game.waste[0] || null} 
                 onClick={() => {}} 
+                onDoubleClick={() => game.waste[0] && handleDoubleClick(game.waste[0], 'waste', 0)}
                 draggable={!!game.waste[0]} 
                 onDragStart={(e) => game.waste[0] && handleDragStart(e, game.waste[0], 'waste', 0)} 
               />
@@ -122,6 +137,10 @@ function App(): React.ReactElement {
                 <CardComponent
                   card={game.foundations[index][game.foundations[index].length - 1] || null}
                   onClick={() => {}}
+                  onDoubleClick={() => {
+                    const topCard = game.foundations[index][game.foundations[index].length - 1];
+                    if (topCard) handleDoubleClick(topCard, 'foundation', index);
+                  }}
                 />
               </div>
             ))}
@@ -144,6 +163,7 @@ function App(): React.ReactElement {
                     <CardComponent 
                       card={card} 
                       onClick={() => {}} 
+                      onDoubleClick={() => card.faceUp && handleDoubleClick(card, 'tableau', index)}
                       faceDown={!card.faceUp} 
                       draggable={card.faceUp}
                       onDragStart={(e) => card.faceUp && handleDragStart(e, card, 'tableau', index)}
