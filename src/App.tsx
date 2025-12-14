@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import CardComponent from './components/Card';
-import { initializeGame, moveCard } from './gameLogic';
+import { initializeGame, moveCard, canMoveToFoundation } from './gameLogic';
 import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
 
@@ -83,15 +83,13 @@ function App(): React.ReactElement {
   }, [history]);
 
   const handleDoubleClick = useCallback((card: Card, fromType: string, fromIndex: number | string) => {
-    if (card.rank === 'A') {
-      // Find an empty foundation
-      const emptyFoundationIndex = game.foundations.findIndex(foundation => foundation.length === 0);
-      if (emptyFoundationIndex !== -1) {
-        const newGame = moveCard(game, fromType, fromIndex, 'foundation', emptyFoundationIndex, card.id);
-        if (newGame !== game) {
-          setHistory(prev => [...prev, game]);
-          setGame(newGame);
-        }
+    // Find a foundation where the card can be placed
+    const foundationIndex = game.foundations.findIndex(foundation => canMoveToFoundation(card, foundation));
+    if (foundationIndex !== -1) {
+      const newGame = moveCard(game, fromType, fromIndex, 'foundation', foundationIndex, card.id);
+      if (newGame !== game) {
+        setHistory(prev => [...prev, game]);
+        setGame(newGame);
       }
     }
   }, [game]);
