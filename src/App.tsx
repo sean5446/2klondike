@@ -50,24 +50,23 @@ function App(): React.ReactElement {
   }, []);
 
   const handleDeckClick = useCallback(() => {
-    setGame((prevGame) => {
-      const newGame = prevGame.deck.length === 0
-        ? {
-          ...prevGame,
-          deck: prevGame.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
-          waste: [],
-        }
-        : {
-          ...prevGame,
-          deck: prevGame.deck.slice(1),
-          waste: [{ ...prevGame.deck[0], faceUp: true }, ...prevGame.waste],
-          selectedCard: null,
-          selectedFrom: null,
-        };
-      setHistory(prev => [...prev, prevGame]);
-      return newGame;
-    });
-  }, []);
+    const nextGame = game.deck.length === 0
+      ? {
+        ...game,
+        deck: game.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
+        waste: [],
+      }
+      : {
+        ...game,
+        deck: game.deck.slice(1),
+        waste: [{ ...game.deck[0], faceUp: true }, ...game.waste],
+        selectedCard: null,
+        selectedFrom: null,
+      };
+
+    setHistory(prev => [...prev, game]);
+    setGame(nextGame);
+  }, [game]);
 
   const handleNewGame = useCallback(() => {
     const seed = customSeed.trim() ? parseInt(customSeed, 10) : undefined;
