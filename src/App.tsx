@@ -1,14 +1,31 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import CardComponent from './components/Card';
 import { initializeGame, moveCard } from './gameLogic';
 import { GameState, Card } from './types';
+import Confetti from 'react-confetti';
 
 
 
 // Main App component
 function App(): React.ReactElement {
   const [game, setGame] = useState<GameState>(initializeGame());
+  const [isWon, setIsWon] = useState(false);
+
+  useEffect(() => {
+    const won = game.deck.length === 0 && game.tableau.every(pile => pile.length === 0);
+    setIsWon(won);
+  }, [game]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'w' && e.ctrlKey && e.altKey) {
+        setIsWon(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleDragStart = useCallback((e: React.DragEvent, card: Card, fromType: string, fromIndex: number | string) => {
     e.dataTransfer.setData('text/plain', `${card.id}|${fromType}|${fromIndex}`);
@@ -55,6 +72,7 @@ function App(): React.ReactElement {
 
   return (
     <div className="app">
+      {isWon && <Confetti />}
       <header className="app-header">
         <h1>Double Klondike</h1>
         <button onClick={handleNewGame} className="btn-new-game">
