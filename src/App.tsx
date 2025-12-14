@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import CardComponent from './components/Card';
-import { initializeGame, moveCard, canMoveToFoundation } from './gameLogic';
+import { initializeGame, moveCard, canMoveToFoundation, hasWon } from './gameLogic';
 import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
 
@@ -15,8 +15,7 @@ function App(): React.ReactElement {
   const [customSeed, setCustomSeed] = useState<string>('');
 
   useEffect(() => {
-    const won = game.deck.length === 0 && game.tableau.every(pile => pile.length === 0);
-    setIsWon(won);
+    setIsWon(hasWon(game));
   }, [game]);
 
   useEffect(() => {
@@ -103,7 +102,7 @@ function App(): React.ReactElement {
         <div className="title-section">
           <h1>Double Klondike</h1>
           <div className="subtitle">
-            <p className="version">v1.01</p>
+            <p className="version">v1.02</p>
             <p className="turn-count">Turn count: {history.length}</p>
           </div>
         </div>

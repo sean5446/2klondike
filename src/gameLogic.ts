@@ -120,6 +120,21 @@ export const isValidSequence = (cards: Card[]): boolean => {
   return true;
 };
 
+export const hasWon = (game: GameState): boolean => {
+  const deckEmpty = game.deck.length === 0;
+  const wasteEmpty = game.waste.length === 0;
+
+  const foundationAceCount = game.foundations.reduce((count, pile) =>
+    count + pile.filter(card => card.rank === 'A').length,
+  0);
+
+  const tableauKingCount = game.tableau.reduce((count, pile) =>
+    count + pile.filter(card => card.rank === 'K').length,
+  0);
+
+  return deckEmpty && wasteEmpty && foundationAceCount === 8 && tableauKingCount === 8;
+};
+
 export const moveCard = (gameState: GameState, fromType: string, fromIndex: number | string, toType: string, toIndex: number | string, cardId: string): GameState => {
   const newState = {
     ...gameState,
