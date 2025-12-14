@@ -101,7 +101,13 @@ function App(): React.ReactElement {
     <div className="app">
       {isWon && <Confetti />}
       <header className="app-header">
-        <h1>Double Klondike</h1>
+        <div className="title-section">
+          <h1>Double Klondike</h1>
+          <div className="subtitle">
+            <p className="version">v1.01</p>
+            <p className="turn-count">Turn count: {history.length}</p>
+          </div>
+        </div>
         <div className="header-right">
           <div className="header-buttons">
             <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
@@ -112,10 +118,10 @@ function App(): React.ReactElement {
             </button>
           </div>
           <div className="seed-info">
-            <span>Seed: {game.seed}</span>
+            <span>Game ID: {game.seed}</span>
             <input
               type="number"
-              placeholder="Enter seed"
+              placeholder="Enter Game ID"
               value={customSeed}
               onChange={(e) => setCustomSeed(e.target.value)}
             />
