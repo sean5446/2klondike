@@ -10,6 +10,7 @@ import Confetti from 'react-confetti';
 // Main App component
 function App(): React.ReactElement {
   const [game, setGame] = useState<GameState>(initializeGame());
+  const [history, setHistory] = useState<GameState[]>([]);
   const [isWon, setIsWon] = useState(false);
 
   useEffect(() => {
@@ -36,8 +37,12 @@ function App(): React.ReactElement {
     const data = e.dataTransfer.getData('text/plain');
     const [cardId, fromType, fromIndexStr] = data.split('|');
     const fromIndex = parseInt(fromIndexStr);
-    setGame(prev => moveCard(prev, fromType, fromIndex, toType, toIndex, cardId));
-  }, []);
+    const newGame = moveCard(game, fromType, fromIndex, toType, toIndex, cardId);
+    if (newGame !== game) { // Only push to history if the move actually changed the state
+      setHistory(prev => [...prev, game]);
+      setGame(newGame);
+    }
+  }, [game]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -45,39 +50,51 @@ function App(): React.ReactElement {
 
   const handleDeckClick = useCallback(() => {
     setGame((prevGame) => {
-      if (prevGame.deck.length === 0) {
-        // Recycle waste back to deck
-        return {
-          ...prevGame,
-          deck: prevGame.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
-          waste: [],
-        };
-      }
-
-      // Draw card from deck
-      const newCard = { ...prevGame.deck[0], faceUp: true };
-      return {
-        ...prevGame,
-        deck: prevGame.deck.slice(1),
-        waste: [newCard, ...prevGame.waste],
-        selectedCard: null,
-        selectedFrom: null,
-      };
+      const newGame = prevGame.deck.length === 0
+        ? {
+            ...prevGame,
+            deck: prevGame.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
+            waste: [],
+          }
+        : {
+            ...prevGame,
+            deck: prevGame.deck.slice(1),
+            waste: [{ ...prevGame.deck[0], faceUp: true }, ...prevGame.waste],
+            selectedCard: null,
+            selectedFrom: null,
+          };
+      setHistory(prev => [...prev, prevGame]);
+      return newGame;
     });
   }, []);
 
   const handleNewGame = useCallback(() => {
-    setGame(initializeGame());
+    const newGame = initializeGame();
+    setGame(newGame);
+    setHistory([]);
   }, []);
+
+  const handleUndo = useCallback(() => {
+    if (history.length > 0) {
+      const previousGame = history[history.length - 1];
+      setGame(previousGame);
+      setHistory(prev => prev.slice(0, -1));
+    }
+  }, [history]);
 
   return (
     <div className="app">
       {isWon && <Confetti />}
       <header className="app-header">
         <h1>Double Klondike</h1>
-        <button onClick={handleNewGame} className="btn-new-game">
-          New Game
-        </button>
+        <div className="header-buttons">
+          <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
+            Undo
+          </button>
+          <button onClick={handleNewGame} className="btn-new-game">
+            New Game
+          </button>
+        </div>
       </header>
 
       <div className="game-board">

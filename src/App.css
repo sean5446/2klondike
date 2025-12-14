@@ -24,7 +24,13 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.btn-new-game {
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-new-game,
+.btn-undo {
   padding: 12px 24px;
   font-size: 1rem;
   background-color: #4caf50;
@@ -35,8 +41,14 @@
   transition: background-color 0.3s;
 }
 
-.btn-new-game:hover {
+.btn-new-game:hover,
+.btn-undo:hover:not(:disabled) {
   background-color: #45a049;
+}
+
+.btn-undo:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .game-board {
