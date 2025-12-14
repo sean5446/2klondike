@@ -59,7 +59,7 @@
 
 .stock-waste {
   display: flex;
-  gap: 30px;
+  gap: 15px;
 }
 
 .stock,
@@ -81,7 +81,7 @@
 
 .foundations {
   display: flex;
-  gap: 15px;
+  gap: 5px;
 }
 
 .foundation {
@@ -218,6 +218,10 @@
 
 .card-suit {
   font-size: 0.8rem;
+}
+
+.card-suit-large {
+  font-size: 1.3rem;
 }
 
 .card-center {
