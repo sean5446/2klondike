@@ -133,6 +133,7 @@
   user-select: none;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   transition: transform 0.1s, box-shadow 0.1s;
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
 }
 
 .card:hover {
