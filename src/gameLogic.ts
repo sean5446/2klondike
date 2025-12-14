@@ -1,7 +1,16 @@
 import { Card, GameState, Suit, Rank } from './types';
 
+// Seeded random number generator
+export const seededRandom = (seed: number) => {
+  let x = seed;
+  return () => {
+    x = (x * 9301 + 49297) % 233280;
+    return x / 233280;
+  };
+};
+
 // Utility functions
-export const createDeck = (numDecks: number = 1): Card[] => {
+export const createDeck = (numDecks: number = 1, rng?: () => number): Card[] => {
   const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
   const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   const deck: Card[] = [];
@@ -19,11 +28,13 @@ export const createDeck = (numDecks: number = 1): Card[] => {
     }
   }
 
-  return deck.sort(() => Math.random() - 0.5);
+  return deck.sort(() => (rng ? rng() : Math.random()) - 0.5);
 };
 
-export const initializeGame = (): GameState => {
-  const deck = createDeck(2);
+export const initializeGame = (seed?: number): GameState => {
+  const actualSeed = seed ?? Math.floor(Math.random() * 1000000);
+  const rng = seededRandom(actualSeed);
+  const deck = createDeck(2, rng);
   const tableau: Card[][] = [];
 
   // Create tableau with 9 piles
@@ -44,6 +55,7 @@ export const initializeGame = (): GameState => {
     tableau,
     selectedCard: null,
     selectedFrom: null,
+    seed: actualSeed,
   };
 };
 

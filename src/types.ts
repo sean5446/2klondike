@@ -15,4 +15,5 @@ export interface GameState {
   tableau: Card[][];
   selectedCard: Card | null;
   selectedFrom: string | null;
+  seed: number;
 }

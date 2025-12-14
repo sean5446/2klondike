@@ -12,6 +12,7 @@ function App(): React.ReactElement {
   const [game, setGame] = useState<GameState>(initializeGame());
   const [history, setHistory] = useState<GameState[]>([]);
   const [isWon, setIsWon] = useState(false);
+  const [customSeed, setCustomSeed] = useState<string>('');
 
   useEffect(() => {
     const won = game.deck.length === 0 && game.tableau.every(pile => pile.length === 0);
@@ -52,27 +53,29 @@ function App(): React.ReactElement {
     setGame((prevGame) => {
       const newGame = prevGame.deck.length === 0
         ? {
-            ...prevGame,
-            deck: prevGame.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
-            waste: [],
-          }
+          ...prevGame,
+          deck: prevGame.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
+          waste: [],
+        }
         : {
-            ...prevGame,
-            deck: prevGame.deck.slice(1),
-            waste: [{ ...prevGame.deck[0], faceUp: true }, ...prevGame.waste],
-            selectedCard: null,
-            selectedFrom: null,
-          };
+          ...prevGame,
+          deck: prevGame.deck.slice(1),
+          waste: [{ ...prevGame.deck[0], faceUp: true }, ...prevGame.waste],
+          selectedCard: null,
+          selectedFrom: null,
+        };
       setHistory(prev => [...prev, prevGame]);
       return newGame;
     });
   }, []);
 
   const handleNewGame = useCallback(() => {
-    const newGame = initializeGame();
+    const seed = customSeed.trim() ? parseInt(customSeed, 10) : undefined;
+    const newGame = initializeGame(seed);
     setGame(newGame);
     setHistory([]);
-  }, []);
+    setCustomSeed(''); // Clear after use
+  }, [customSeed]);
 
   const handleUndo = useCallback(() => {
     if (history.length > 0) {
@@ -99,13 +102,24 @@ function App(): React.ReactElement {
       {isWon && <Confetti />}
       <header className="app-header">
         <h1>Double Klondike</h1>
-        <div className="header-buttons">
-          <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
-            Undo
-          </button>
-          <button onClick={handleNewGame} className="btn-new-game">
-            New Game
-          </button>
+        <div className="header-right">
+          <div className="header-buttons">
+            <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
+              Undo
+            </button>
+            <button onClick={handleNewGame} className="btn-new-game">
+              New Game
+            </button>
+          </div>
+          <div className="seed-info">
+            <span>Seed: {game.seed}</span>
+            <input
+              type="number"
+              placeholder="Enter seed"
+              value={customSeed}
+              onChange={(e) => setCustomSeed(e.target.value)}
+            />
+          </div>
         </div>
       </header>
 
@@ -118,23 +132,23 @@ function App(): React.ReactElement {
               <div className="stock-count">{game.deck.length}</div>
             </div>
             <div className="waste">
-              <CardComponent 
-                card={game.waste[0] || null} 
-                onClick={() => {}} 
+              <CardComponent
+                card={game.waste[0] || null}
+                onClick={() => { }}
                 onDoubleClick={() => game.waste[0] && handleDoubleClick(game.waste[0], 'waste', 0)}
-                draggable={!!game.waste[0]} 
-                onDragStart={(e) => game.waste[0] && handleDragStart(e, game.waste[0], 'waste', 0)} 
+                draggable={!!game.waste[0]}
+                onDragStart={(e) => game.waste[0] && handleDragStart(e, game.waste[0], 'waste', 0)}
               />
             </div>
           </div>
 
           {/* Foundations */}
           <div className="foundations">
-            {Array.from({length: 8}, (_, index) => (
+            {Array.from({ length: 8 }, (_, index) => (
               <div key={index} className="foundation" onDrop={(e) => handleDrop(e, 'foundation', index)} onDragOver={handleDragOver}>
                 <CardComponent
                   card={game.foundations[index][game.foundations[index].length - 1] || null}
-                  onClick={() => {}}
+                  onClick={() => { }}
                   onDoubleClick={() => {
                     const topCard = game.foundations[index][game.foundations[index].length - 1];
                     if (topCard) handleDoubleClick(topCard, 'foundation', index);
@@ -158,11 +172,11 @@ function App(): React.ReactElement {
                     className="tableau-card"
                     style={{ transform: `translateY(${cardIndex * 30}px)` }}
                   >
-                    <CardComponent 
-                      card={card} 
-                      onClick={() => {}} 
+                    <CardComponent
+                      card={card}
+                      onClick={() => { }}
                       onDoubleClick={() => card.faceUp && handleDoubleClick(card, 'tableau', index)}
-                      faceDown={!card.faceUp} 
+                      faceDown={!card.faceUp}
                       draggable={card.faceUp}
                       onDragStart={(e) => card.faceUp && handleDragStart(e, card, 'tableau', index)}
                     />
