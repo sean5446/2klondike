@@ -4,6 +4,7 @@ import CardComponent from './components/Card';
 import { initializeGame, moveCard, canMoveToFoundation, hasWon } from './gameLogic';
 import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
+import pkg from '../package.json';
 
 
 
@@ -150,7 +151,7 @@ function App(): React.ReactElement {
         <div className="title-section">
           <h1>Double Klondike</h1>
           <div className="subtitle">
-            <p className="version">v1.0.4</p>
+            <p className="version">v{pkg.version}</p>
             <p className="turn-count">Turn count: {history.length}</p>
           </div>
         </div>
