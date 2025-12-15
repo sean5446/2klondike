@@ -136,12 +136,13 @@ export const hasWon = (game: GameState): boolean => {
 };
 
 export const moveCard = (gameState: GameState, fromType: string, fromIndex: number | string, toType: string, toIndex: number | string, cardId: string): GameState => {
-  const newState = {
+  // Clone arrays and card objects so mutations produce new instances
+  const newState: GameState = {
     ...gameState,
-    foundations: gameState.foundations.map(pile => [...pile]),
-    tableau: gameState.tableau.map(pile => [...pile]),
-    waste: [...gameState.waste],
-    deck: [...gameState.deck]
+    foundations: gameState.foundations.map(pile => pile.map(card => ({ ...card }))),
+    tableau: gameState.tableau.map(pile => pile.map(card => ({ ...card }))),
+    waste: gameState.waste.map(card => ({ ...card })),
+    deck: gameState.deck.map(card => ({ ...card })),
   };
 
   let cards: Card[] = [];

@@ -9,6 +9,11 @@ import Confetti from 'react-confetti';
 
 // Main App component
 function App(): React.ReactElement {
+  // Create deep clone of game state for history snapshots.
+  const cloneGame = (g: GameState): GameState => {
+    return structuredClone(g) as GameState;
+  };
+
   const [game, setGame] = useState<GameState>(() => initializeGame());
   const [history, setHistory] = useState<GameState[]>([]);
   const [isWon, setIsWon] = useState(false);
@@ -64,7 +69,7 @@ function App(): React.ReactElement {
     const fromIndex = parseInt(fromIndexStr);
     const newGame = moveCard(game, fromType, fromIndex, toType, toIndex, cardId);
     if (newGame !== game) { // Only push to history if the move actually changed the state
-      setHistory(prev => [...prev, game]);
+      setHistory(prev => [...prev, cloneGame(game)]);
       setGame(newGame);
     }
   }, [game]);
@@ -88,7 +93,7 @@ function App(): React.ReactElement {
         selectedFrom: null,
       };
 
-    setHistory(prev => [...prev, game]);
+    setHistory(prev => [...prev, cloneGame(game)]);
     setGame(nextGame);
   }, [game]);
 
@@ -131,7 +136,7 @@ function App(): React.ReactElement {
     if (foundationIndex !== -1) {
       const newGame = moveCard(game, fromType, fromIndex, 'foundation', foundationIndex, card.id);
       if (newGame !== game) {
-        setHistory(prev => [...prev, game]);
+        setHistory(prev => [...prev, cloneGame(game)]);
         setGame(newGame);
       }
     }
@@ -141,10 +146,11 @@ function App(): React.ReactElement {
     <div className="app">
       {isWon && <Confetti />}
       <header className="app-header">
+        {/* App Header: title, subtitle, version, turn count, undo, new game, game ID */}
         <div className="title-section">
           <h1>Double Klondike</h1>
           <div className="subtitle">
-            <p className="version">v1.0.3</p>
+            <p className="version">v1.0.4</p>
             <p className="turn-count">Turn count: {history.length}</p>
           </div>
         </div>
