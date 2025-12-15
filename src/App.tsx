@@ -9,10 +9,11 @@ import Confetti from 'react-confetti';
 
 // Main App component
 function App(): React.ReactElement {
-  const [game, setGame] = useState<GameState>(initializeGame());
+  const [game, setGame] = useState<GameState>(() => initializeGame());
   const [history, setHistory] = useState<GameState[]>([]);
   const [isWon, setIsWon] = useState(false);
-  const [customSeed, setCustomSeed] = useState<string>('');
+
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     setIsWon(hasWon(game));
@@ -27,6 +28,30 @@ function App(): React.ReactElement {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const applySeedToUrl = useCallback((seed: number) => {
+    const basePath = '/2klondike';
+    const newPath = `${basePath}/${seed}`;
+    const url = `${window.location.origin}${newPath}`;
+    window.history.replaceState({}, '', url);
+  }, []);
+
+  useEffect(() => {
+    // Expect path like /2klondike/123
+    const path = window.location.pathname;
+    const match = path.match(/\/2klondike\/(\d+)/);
+    const paramSeed = match?.[1];
+    if (!paramSeed) return;
+
+    const parsedSeed = Number.parseInt(paramSeed, 10);
+    if (Number.isNaN(parsedSeed)) return;
+
+    const seededGame = initializeGame(parsedSeed);
+    setGame(seededGame);
+    setHistory([]);
+
+    applySeedToUrl(seededGame.seed);
+  }, [applySeedToUrl]);
 
   const handleDragStart = useCallback((e: React.DragEvent, card: Card, fromType: string, fromIndex: number | string) => {
     e.dataTransfer.setData('text/plain', `${card.id}|${fromType}|${fromIndex}`);
@@ -68,12 +93,29 @@ function App(): React.ReactElement {
   }, [game]);
 
   const handleNewGame = useCallback(() => {
-    const seed = customSeed.trim() ? parseInt(customSeed, 10) : undefined;
-    const newGame = initializeGame(seed);
+    const newGame = initializeGame();
     setGame(newGame);
     setHistory([]);
-    setCustomSeed(''); // Clear after use
-  }, [customSeed]);
+    applySeedToUrl(newGame.seed);
+  }, [applySeedToUrl]);
+
+  const handleCopyLink = useCallback(async () => {
+    const basePath = '/2klondike';
+    const url = `${window.location.origin}${basePath}/${game.seed}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback for environments without clipboard API
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  }, [game.seed]);
 
   const handleUndo = useCallback(() => {
     if (history.length > 0) {
@@ -102,7 +144,7 @@ function App(): React.ReactElement {
         <div className="title-section">
           <h1>Double Klondike</h1>
           <div className="subtitle">
-            <p className="version">v1.02</p>
+            <p className="version">v1.0.3</p>
             <p className="turn-count">Turn count: {history.length}</p>
           </div>
         </div>
@@ -116,13 +158,17 @@ function App(): React.ReactElement {
             </button>
           </div>
           <div className="seed-info">
-            <span>Game ID: {game.seed}</span>
-            <input
-              type="number"
-              placeholder="Enter Game ID"
-              value={customSeed}
-              onChange={(e) => setCustomSeed(e.target.value)}
-            />
+            <a
+              href={`${window.location.origin}/2klondike/${game.seed}`}
+              onClick={(e) => { e.preventDefault(); handleCopyLink(); }}
+              className="game-id-link"
+              title="Click to copy shareable link"
+            >
+              Game ID: {game.seed}
+            </a>
+            {copied && (
+              <span className="copy-toast" role="status" aria-live="polite">Copied game URL!</span>
+            )}
           </div>
         </div>
       </header>
