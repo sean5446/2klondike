@@ -31,15 +31,15 @@ function App(): React.ReactElement {
 
   const applySeedToUrl = useCallback((seed: number) => {
     const basePath = '/2klondike';
-    const newPath = `${basePath}/${seed}`;
+    const newPath = `${basePath}/?${seed}`;
     const url = `${window.location.origin}${newPath}`;
     window.history.replaceState({}, '', url);
   }, []);
 
   useEffect(() => {
-    // Expect path like /2klondike/123
-    const path = window.location.pathname;
-    const match = path.match(/\/2klondike\/(\d+)/);
+    // Expect path like /2klondike/?123
+    const search = window.location.search;
+    const match = search.match(/^\?(\d+)$/);
     const paramSeed = match?.[1];
     if (!paramSeed) return;
 
@@ -101,7 +101,7 @@ function App(): React.ReactElement {
 
   const handleCopyLink = useCallback(async () => {
     const basePath = '/2klondike';
-    const url = `${window.location.origin}${basePath}/${game.seed}`;
+    const url = `${window.location.origin}${basePath}/?${game.seed}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -159,7 +159,7 @@ function App(): React.ReactElement {
           </div>
           <div className="seed-info">
             <a
-              href={`${window.location.origin}/2klondike/${game.seed}`}
+              href={`${window.location.origin}/2klondike/?${game.seed}`}
               onClick={(e) => { e.preventDefault(); handleCopyLink(); }}
               className="game-id-link"
               title="Click to copy shareable link"
