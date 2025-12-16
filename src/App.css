@@ -61,6 +61,18 @@
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
 }
 
+.version,
+.version:link,
+.version:visited,
+.version:active {
+  color: rgb(76, 175, 80);
+  text-decoration: none;
+}
+
+.version:hover {
+  text-decoration: underline;
+}
+
 .turn-count {
   margin: 0;
   font-size: 1rem;
@@ -303,12 +315,11 @@
 }
 
 .game-id-link {
-  color: #0e4d2b;
+  color: white;
   text-decoration: none;
-  font-weight: 600;
   padding: 4px 8px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.7);
+  background: #45a049;
 }
 
 .game-id-link:hover {

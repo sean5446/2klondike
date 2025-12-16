@@ -151,7 +151,14 @@ function App(): React.ReactElement {
         <div className="title-section">
           <h1>Double Klondike</h1>
           <div className="subtitle">
-            <p className="version">v{pkg.version}</p>
+            <a
+              href="https://github.com/sean5446/2klondike/activity"
+              className="version"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              v{pkg.version}
+            </a>
             <p className="turn-count">Turn count: {history.length}</p>
           </div>
         </div>
