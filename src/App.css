@@ -1,7 +1,7 @@
 :root {
   --card-width: 80px;
   --card-height: 120px;
-  --tableau-gap: 40px;
+  --tableau-gap: 20px;
   --tableau-piles: 9;
   --board-width: calc(var(--card-width) * var(--tableau-piles) + var(--tableau-gap) * (var(--tableau-piles) - 1));
 }
