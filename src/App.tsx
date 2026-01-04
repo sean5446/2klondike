@@ -234,7 +234,7 @@ function App(): React.ReactElement {
                   <div
                     key={card.id}
                     className="tableau-card"
-                    style={{ transform: `translateY(${cardIndex * 15}px)` }}
+                    style={{ transform: `translateY(${cardIndex * 30}px)` }}
                   >
                     <CardComponent
                       card={card}
