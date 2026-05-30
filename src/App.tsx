@@ -144,6 +144,11 @@ function App(): React.ReactElement {
   }, [applySeedToUrl]);
 
   const commitMove = useCallback((fromType: string, fromIndex: number, toType: string, toIndex: number, cardId: string): boolean => {
+    // Dropping back onto the same source is a no-op and should not consume a turn.
+    if (fromType === toType && fromIndex === toIndex) {
+      return false;
+    }
+
     const newGame = moveCard(game, fromType, fromIndex, toType, toIndex, cardId);
     if (newGame !== game) {
       setHistory(prev => [...prev, cloneGame(game)]);

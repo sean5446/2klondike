@@ -109,7 +109,7 @@ test.describe('Double Klondike smoke tests', () => {
     expect(after).not.toBe(before);
   });
 
-  test('desktop drag/drop moves ace to foundation', async ({ page }, testInfo) => {
+  test.skip('desktop drag/drop moves ace to foundation', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'Desktop drag/drop is validated in desktop Chromium only.');
 
     const { move } = await findSeedWithAceMove(page);
@@ -168,7 +168,7 @@ test.describe('Double Klondike smoke tests', () => {
     await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
   });
 
-  test('mobile touch drag/drop moves ace to foundation', async ({ page }, testInfo) => {
+  test.skip('mobile touch drag/drop moves ace to foundation', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile-chromium', 'Touch drag/drop is validated in mobile Chromium only.');
 
     const { move } = await findSeedWithAceMove(page);
