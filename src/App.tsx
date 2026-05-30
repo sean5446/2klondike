@@ -4,7 +4,15 @@ import CardComponent from './components/Card';
 import StockWaste from './components/StockWaste';
 import Foundations from './components/Foundations';
 import Tableau from './components/Tableau';
-import { initializeGame, moveCard, canMoveToFoundation, hasWon } from './gameLogic';
+import {
+  cloneGameState,
+  findCardById,
+  findFoundationMoveIndex,
+  hasWon,
+  initializeGame,
+  moveCard,
+  playDeckTurn,
+} from './gameLogic';
 import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
 import pkg from '../package.json';
@@ -51,28 +59,6 @@ function loadStats(): Stats {
 
 function saveStats(stats: Stats): void {
   localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-}
-
-// Create deep clone of game state for history snapshots.
-function cloneGame(g: GameState): GameState {
-  return structuredClone(g) as GameState;
-}
-
-function findCardById(game: GameState, cardId: string): Card | null {
-  const wasteCard = game.waste.find((card) => card.id === cardId);
-  if (wasteCard) return wasteCard;
-
-  for (const pile of game.tableau) {
-    const tableauCard = pile.find((card) => card.id === cardId);
-    if (tableauCard) return tableauCard;
-  }
-
-  for (const pile of game.foundations) {
-    const foundationCard = pile.find((card) => card.id === cardId);
-    if (foundationCard) return foundationCard;
-  }
-
-  return null;
 }
 
 // Main App component
@@ -151,7 +137,7 @@ function App(): React.ReactElement {
 
     const newGame = moveCard(game, fromType, fromIndex, toType, toIndex, cardId);
     if (newGame !== game) {
-      setHistory(prev => [...prev, cloneGame(game)]);
+      setHistory(prev => [...prev, cloneGameState(game)]);
       setGame(newGame);
       return true;
     }
@@ -286,21 +272,9 @@ function App(): React.ReactElement {
   }, [completePointerDrop, updatePointerDragPosition]);
 
   const handleDeckClick = useCallback(() => {
-    const nextGame = game.deck.length === 0
-      ? {
-        ...game,
-        deck: game.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
-        waste: [],
-      }
-      : {
-        ...game,
-        deck: game.deck.slice(1),
-        waste: [{ ...game.deck[0], faceUp: true }, ...game.waste],
-        selectedCard: null,
-        selectedFrom: null,
-      };
+    const nextGame = playDeckTurn(game);
 
-    setHistory(prev => [...prev, cloneGame(game)]);
+    setHistory(prev => [...prev, cloneGameState(game)]);
     setGame(nextGame);
     clearPointerDrag();
   }, [clearPointerDrag, game]);
@@ -353,8 +327,7 @@ function App(): React.ReactElement {
   }, [clearPointerDrag, history]);
 
   const handleDoubleClick = useCallback((card: Card, fromType: string, fromIndex: number | string) => {
-    // Find a foundation where the card can be placed
-    const foundationIndex = game.foundations.findIndex(foundation => canMoveToFoundation(card, foundation));
+    const foundationIndex = findFoundationMoveIndex(game, card);
     if (foundationIndex !== -1) {
       const fromIndexNumber = typeof fromIndex === 'number' ? fromIndex : Number.parseInt(String(fromIndex), 10);
       if (Number.isNaN(fromIndexNumber)) return;

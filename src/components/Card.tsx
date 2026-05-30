@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card as CardType } from '../types';
 import { getSuitColor, getSuitSymbol } from '../gameLogic';
+import './Card.css';
 
 // Card component
 interface CardProps {

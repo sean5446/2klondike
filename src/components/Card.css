@@ -1,0 +1,142 @@
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  user-select: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s, box-shadow 0.1s, opacity 0.1s;
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
+}
+
+.card.is-draggable {
+  touch-action: none;
+}
+
+.card.is-dragging {
+  opacity: 0.18;
+}
+
+.card.is-selected {
+  box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.95), 0 8px 18px rgba(0, 0, 0, 0.38);
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.app.is-pointer-dragging .card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.drag-preview .card {
+  opacity: 1;
+  transform: rotate(2deg) scale(1.03);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+.drag-preview .card:hover,
+.drag-preview .card.is-dragging {
+  opacity: 1;
+  transform: rotate(2deg) scale(1.03);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+.card-back:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 2px white;
+}
+
+.app.is-pointer-dragging .card-back:hover {
+  box-shadow: none !important;
+}
+
+.card-back {
+  background: linear-gradient(135deg, #c41e3a 0%, #a01830 100%);
+  border: 2px solid #8b1538;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2px white;
+}
+
+.card-pattern {
+  width: 100%;
+  height: 100%;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.1) 10px, rgba(255, 255, 255, 0.1) 20px),
+    repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.15) 10px, rgba(255, 255, 255, 0.15) 20px);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.card-empty {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-face {
+  background-color: white;
+  border: 2px solid #333;
+  position: relative;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.card-face.red {
+  color: #e74c3c;
+}
+
+.card-face.black {
+  color: #000;
+}
+
+.card-corner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  font-size: clamp(9px, calc(var(--card-width) * 0.16), 11px);
+  line-height: 0.8;
+}
+
+.card-corner.top-left {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.card-corner.bottom-right {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  transform: rotate(180deg);
+}
+
+.card-rank {
+  font-weight: bold;
+  font-size: clamp(10px, calc(var(--card-width) * 0.17), 12px);
+}
+
+.card-rank-large {
+  font-size: clamp(13px, calc(var(--card-width) * 0.36), 24px);
+}
+
+.card-suit {
+  font-size: clamp(10px, calc(var(--card-width) * 0.2), 13px);
+}
+
+.card-suit-large {
+  font-size: clamp(12px, calc(var(--card-width) * 0.3), 21px);
+}
+
+.card-center {
+  font-size: clamp(18px, calc(var(--card-width) * 0.58), 40px);
+  opacity: 0.8;
+}

@@ -59,6 +59,27 @@ export const initializeGame = (seed?: number): GameState => {
   };
 };
 
+export const cloneGameState = (game: GameState): GameState => {
+  return structuredClone(game) as GameState;
+};
+
+export const findCardById = (game: GameState, cardId: string): Card | null => {
+  const wasteCard = game.waste.find((card) => card.id === cardId);
+  if (wasteCard) return wasteCard;
+
+  for (const pile of game.tableau) {
+    const tableauCard = pile.find((card) => card.id === cardId);
+    if (tableauCard) return tableauCard;
+  }
+
+  for (const pile of game.foundations) {
+    const foundationCard = pile.find((card) => card.id === cardId);
+    if (foundationCard) return foundationCard;
+  }
+
+  return null;
+};
+
 export const getSuitColor = (suit: Suit): string => {
   return suit === 'hearts' || suit === 'diamonds' ? 'red' : 'black';
 };
@@ -133,6 +154,28 @@ export const hasWon = (game: GameState): boolean => {
   0);
 
   return deckEmpty && wasteEmpty && foundationAceCount === 8 && tableauKingCount === 8;
+};
+
+export const playDeckTurn = (game: GameState): GameState => {
+  if (game.deck.length === 0) {
+    return {
+      ...game,
+      deck: game.waste.map((card) => ({ ...card, faceUp: false })).reverse(),
+      waste: [],
+    };
+  }
+
+  return {
+    ...game,
+    deck: game.deck.slice(1),
+    waste: [{ ...game.deck[0], faceUp: true }, ...game.waste],
+    selectedCard: null,
+    selectedFrom: null,
+  };
+};
+
+export const findFoundationMoveIndex = (game: GameState, card: Card): number => {
+  return game.foundations.findIndex((foundation) => canMoveToFoundation(card, foundation));
 };
 
 export const moveCard = (gameState: GameState, fromType: string, fromIndex: number | string, toType: string, toIndex: number | string, cardId: string): GameState => {
