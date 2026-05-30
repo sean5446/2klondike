@@ -28,7 +28,17 @@ export const createDeck = (numDecks: number = 1, rng?: () => number): Card[] => 
     }
   }
 
-  return deck.sort(() => (rng ? rng() : Math.random()) - 0.5);
+  // Fisher-Yates shuffle: makes exactly n-1 RNG calls in a fixed order,
+  // so the same seed always produces the same deck regardless of JS engine
+  // or version. Array.sort() with a random comparator is non-deterministic
+  // because the number/order of comparisons is implementation-defined.
+  const shuffled = [...deck];
+  const rand = rng ?? Math.random;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 };
 
 export const initializeGame = (seed?: number): GameState => {
