@@ -73,7 +73,7 @@ Use this to re-run specific tests, inspect step-by-step actions, and open traces
 
 Tip: failed runs also write artifacts under `test-results/` (error context, traces, screenshots when available).
 
-CI/CD note: the GitHub Actions deploy workflow now runs these Playwright tests before the build/deploy steps.
+CI/CD note: the GitHub Actions workflow runs these Playwright tests on branch pushes and pull requests, then only builds/deploys from `main`.
 
 ## Running for LAN
 ```bash
