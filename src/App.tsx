@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import './App.css';
 import CardComponent from './components/Card';
+import StockWaste from './components/StockWaste';
+import Foundations from './components/Foundations';
+import Tableau from './components/Tableau';
 import { initializeGame, moveCard, canMoveToFoundation, hasWon } from './gameLogic';
 import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
@@ -25,12 +28,6 @@ interface PointerDragState {
   offsetX: number;
   offsetY: number;
   didMove: boolean;
-}
-
-interface TouchSelectionState {
-  cardId: string;
-  fromType: string;
-  fromIndex: number;
 }
 
 const STATS_KEY = '2klondike-stats';
@@ -84,7 +81,6 @@ function App(): React.ReactElement {
   const [history, setHistory] = useState<GameState[]>([]);
   const [isWon, setIsWon] = useState(false);
   const [pointerDrag, setPointerDrag] = useState<PointerDragState | null>(null);
-  const [touchSelection, setTouchSelection] = useState<TouchSelectionState | null>(null);
 
   const [copied, setCopied] = useState<boolean>(false);
   const [stats, setStats] = useState<Stats>(loadStats);
@@ -174,10 +170,8 @@ function App(): React.ReactElement {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault();
 
-    // Reset tap-selection when starting a drag gesture.
-    setTouchSelection(null);
-
-    if (e.currentTarget.hasPointerCapture && !e.currentTarget.hasPointerCapture(e.pointerId)) {
+    // Apply pointer capture for touch to keep drag tracking stable.
+    if (e.pointerType === 'touch' && 'setPointerCapture' in e.currentTarget) {
       e.currentTarget.setPointerCapture(e.pointerId);
     }
 
@@ -224,6 +218,7 @@ function App(): React.ReactElement {
     const targetElement = target as HTMLElement | null;
     const pointTarget = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>('[data-drop-type]');
     const eventTarget = targetElement?.closest<HTMLElement>('[data-drop-type]');
+    // For touch, prioritize elementFromPoint; for mouse/pointer, prioritize event target
     const dropTarget = drag.pointerType === 'touch'
       ? pointTarget ?? eventTarget
       : eventTarget ?? pointTarget;
@@ -238,39 +233,20 @@ function App(): React.ReactElement {
           if (drag.pointerType === 'touch' && !didMoveOnRelease) {
           const directMove = commitMove(drag.fromType, drag.fromIndex, toType, toIndex, drag.cardId);
           if (directMove) {
-            setTouchSelection(null);
             clearPointerDrag();
             return;
           }
-
-          // Touch tap-to-move fallback: tap card to select, then tap destination pile.
-          if (touchSelection && touchSelection.cardId !== drag.cardId) {
-            const moved = commitMove(touchSelection.fromType, touchSelection.fromIndex, toType, toIndex, touchSelection.cardId);
-            if (moved) {
-              setTouchSelection(null);
-              clearPointerDrag();
-              return;
-            }
-          }
-
-            if (drag.fromType === 'tableau' || drag.fromType === 'waste') {
-              setTouchSelection((prev) => {
-                if (prev?.cardId === drag.cardId) return null;
-                return { cardId: drag.cardId, fromType: drag.fromType, fromIndex: drag.fromIndex };
-              });
-            }
           clearPointerDrag();
           return;
         }
 
         applyPointerDrop(toType, toIndex);
-        setTouchSelection(null);
         return;
       }
     }
 
     clearPointerDrag();
-  }, [applyPointerDrop, clearPointerDrag, commitMove, touchSelection]);
+}, [applyPointerDrop, clearPointerDrag, commitMove]);
 
   const handleGlobalPointerMove = useCallback((e: React.PointerEvent) => {
     if (!pointerDragRef.current) return;
@@ -322,7 +298,6 @@ function App(): React.ReactElement {
     setHistory(prev => [...prev, cloneGame(game)]);
     setGame(nextGame);
     clearPointerDrag();
-    setTouchSelection(null);
   }, [clearPointerDrag, game]);
 
   const handleNewGame = useCallback(() => {
@@ -342,7 +317,6 @@ function App(): React.ReactElement {
     setGame(newGame);
     setHistory([]);
     clearPointerDrag();
-    setTouchSelection(null);
     applySeedToUrl(newGame.seed);
   }, [applySeedToUrl, clearPointerDrag, history.length, isWon]);
 
@@ -370,7 +344,6 @@ function App(): React.ReactElement {
       setGame(previousGame);
       setHistory(prev => prev.slice(0, -1));
       clearPointerDrag();
-      setTouchSelection(null);
     }
   }, [clearPointerDrag, history]);
 
@@ -384,24 +357,7 @@ function App(): React.ReactElement {
     }
   }, [commitMove, game.foundations]);
 
-  const handleTapSelect = useCallback((card: Card, fromType: string, fromIndex: number) => {
-    if (!card.faceUp) return;
-    setTouchSelection((prev) => {
-      if (prev?.cardId === card.id) return null;
-      return { cardId: card.id, fromType, fromIndex };
-    });
-  }, []);
 
-  const handleTapDrop = useCallback((toType: string, toIndex: number) => {
-    if (!touchSelection) return;
-    const moved = commitMove(touchSelection.fromType, touchSelection.fromIndex, toType, toIndex, touchSelection.cardId);
-    // Always clear tap-selection after an attempted destination tap.
-    if (!moved) {
-      setTouchSelection(null);
-      return;
-    }
-    setTouchSelection(null);
-  }, [commitMove, touchSelection]);
 
   return (
     <div className={`app ${pointerDrag ? 'is-pointer-dragging' : ''}`} onPointerMoveCapture={handleGlobalPointerMove} onPointerUpCapture={handleGlobalPointerUp} onPointerCancelCapture={handleGlobalPointerUp}>
@@ -488,91 +444,30 @@ function App(): React.ReactElement {
         <div className="board-layout">
         {/* Top area: Stock and Waste */}
         <div className="top-area">
-          <div className="stock-waste">
-            <div className="stock">
-              <CardComponent card={null} onClick={handleDeckClick} faceDown={game.deck.length > 0} />
-              <div className="stock-count">{game.deck.length}</div>
-            </div>
-            <div className="waste">
-              <CardComponent
-                card={game.waste[0] || null}
-                onClick={() => game.waste[0] && handleTapSelect(game.waste[0], 'waste', 0)}
-                onDoubleClick={() => game.waste[0] && handleDoubleClick(game.waste[0], 'waste', 0)}
-                draggable={!!game.waste[0]}
-                onPointerDown={(e) => game.waste[0] && handlePointerStart(e, game.waste[0], 'waste', 0)}
-                isDragging={pointerDrag?.cardId === game.waste[0]?.id}
-              />
-            </div>
-          </div>
+          <StockWaste
+            deck={game.deck}
+            waste={game.waste}
+            pointerDragCardId={pointerDrag?.cardId || null}
+            onDeckClick={handleDeckClick}
+            onWasteDoubleClick={(card) => handleDoubleClick(card, 'waste', 0)}
+            onWastePointerDown={(e, card) => handlePointerStart(e, card, 'waste', 0)}
+          />
 
-          {/* Foundations */}
-          <div className="foundations">
-            {Array.from({ length: 8 }, (_, index) => (
-              <div
-                key={index}
-                className="foundation"
-                data-drop-type="foundation"
-                data-drop-index={index}
-                onClick={() => handleTapDrop('foundation', index)}
-                onPointerUp={(e) => {
-                  e.preventDefault();
-                  applyPointerDrop('foundation', index);
-                  handleTapDrop('foundation', index);
-                }}
-              >
-                <CardComponent
-                  card={game.foundations[index][game.foundations[index].length - 1] || null}
-                  onClick={() => { }}
-                  onDoubleClick={() => {
-                    const topCard = game.foundations[index][game.foundations[index].length - 1];
-                    if (topCard) handleDoubleClick(topCard, 'foundation', index);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
+          <Foundations
+            foundations={game.foundations}
+            pointerDragCardId={pointerDrag?.cardId || null}
+            onFoundationDoubleClick={(card, index) => handleDoubleClick(card, 'foundation', index)}
+            onFoundationPointerDrop={(index) => applyPointerDrop('foundation', index)}
+          />
         </div>
 
-        {/* Tableau */}
-        <div className="tableau">
-          {game.tableau.map((pile, index) => (
-            <div
-              key={index}
-              className="tableau-pile"
-              data-drop-type="tableau"
-              data-drop-index={index}
-              onClick={() => handleTapDrop('tableau', index)}
-              onPointerUp={(e) => {
-                e.preventDefault();
-                applyPointerDrop('tableau', index);
-                handleTapDrop('tableau', index);
-              }}
-            >
-              {pile.length === 0 ? (
-                <div className="tableau-empty-slot" />
-              ) : (
-                pile.map((card, cardIndex) => (
-                  <div
-                    key={card.id}
-                    className="tableau-card"
-                    style={{ transform: `translateY(calc(${cardIndex} * var(--tableau-offset)))` }}
-                  >
-                    <CardComponent
-                      card={card}
-                      onClick={() => handleTapSelect(card, 'tableau', index)}
-                      onDoubleClick={() => card.faceUp && handleDoubleClick(card, 'tableau', index)}
-                      faceDown={!card.faceUp}
-                      draggable={card.faceUp}
-                      onPointerDown={(e) => card.faceUp && handlePointerStart(e, card, 'tableau', index)}
-                      isDragging={pointerDrag?.cardId === card.id}
-                      isSelected={touchSelection?.cardId === card.id}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-          ))}
-        </div>
+        <Tableau
+          tableau={game.tableau}
+          pointerDragCardId={pointerDrag?.cardId || null}
+          onTableauDoubleClick={(card, index) => handleDoubleClick(card, 'tableau', index)}
+          onTableauPointerStart={(e, card, index) => handlePointerStart(e, card, 'tableau', index)}
+          onTableauPointerDrop={(index) => applyPointerDrop('tableau', index)}
+        />
         </div>
       </div>
 

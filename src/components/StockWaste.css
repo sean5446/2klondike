@@ -1,0 +1,31 @@
+.stock-waste {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stock,
+.waste {
+  position: relative;
+  flex: 0 0 var(--card-width);
+  width: var(--card-width);
+  height: var(--card-height);
+}
+
+.stock-count {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 14px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .stock-waste {
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+}

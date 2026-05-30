@@ -142,74 +142,6 @@
   margin: 0 auto 20px;
 }
 
-.stock-waste {
-  display: flex;
-  gap: 15px;
-}
-
-.stock,
-.waste {
-  position: relative;
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-  height: var(--card-height);
-}
-
-.stock-count {
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: white;
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-
-.foundations {
-  display: flex;
-  gap: 5px;
-  margin-left: auto;
-}
-
-.foundation {
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-  height: var(--card-height);
-  border: 2px dashed rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tableau {
-  display: flex;
-  justify-content: flex-start;
-  gap: var(--tableau-gap);
-  flex: 1;
-  width: var(--board-width);
-  margin: 0 auto;
-}
-
-.tableau-pile {
-  position: relative;
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-  min-height: var(--card-height);
-}
-
-.tableau-empty-slot {
-  width: var(--card-width);
-  height: var(--card-height);
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-.tableau-card {
-  position: absolute;
-  width: var(--card-width);
-}
-
 /* Card styles */
 .card {
   width: var(--card-width);
@@ -244,6 +176,11 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
+.app.is-pointer-dragging .card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .drag-preview {
   position: fixed;
   left: 0;
@@ -267,6 +204,10 @@
 
 .card-back:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 2px white;
+}
+
+.app.is-pointer-dragging .card-back:hover {
+  box-shadow: none !important;
 }
 
 .card-back {
@@ -468,17 +409,6 @@
     align-items: flex-start;
     gap: 10px;
     margin-bottom: 12px;
-  }
-
-  .stock-waste {
-    gap: 10px;
-  }
-
-  .foundations {
-    margin-left: 0;
-    display: grid;
-    grid-template-columns: repeat(4, var(--card-width));
-    gap: 6px;
   }
 
   .app-header {

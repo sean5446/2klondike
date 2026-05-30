@@ -1,0 +1,27 @@
+.tableau {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--tableau-gap);
+  flex: 1;
+  width: var(--board-width);
+  margin: 0 auto;
+}
+
+.tableau-pile {
+  position: relative;
+  flex: 0 0 var(--card-width);
+  width: var(--card-width);
+  min-height: var(--card-height);
+}
+
+.tableau-empty-slot {
+  width: var(--card-width);
+  height: var(--card-height);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.tableau-card {
+  position: absolute;
+  width: var(--card-width);
+}
