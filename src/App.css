@@ -1,20 +1,25 @@
 :root {
-  --card-width: 80px;
-  --card-height: 120px;
-  --tableau-gap: 20px;
+  --tableau-gap: clamp(4px, 1.4vw, 20px);
+  --card-width: clamp(32px, calc((100vw - 32px - var(--tableau-gap) * (var(--tableau-piles) - 1)) / var(--tableau-piles)), 80px);
+  --card-height: calc(var(--card-width) * 1.5);
+  --tableau-offset: clamp(18px, calc(var(--card-height) * 0.25), 30px);
   --tableau-piles: 9;
   --board-width: calc(var(--card-width) * var(--tableau-piles) + var(--tableau-gap) * (var(--tableau-piles) - 1));
 }
 
 .app {
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
   display: flex;
   flex-direction: column;
   padding: 0;
   font-family: 'Arial', sans-serif;
   box-sizing: border-box;
+}
+
+.app.is-pointer-dragging {
+  cursor: grabbing;
 }
 
 .app-header {
@@ -115,10 +120,17 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 20px 60px;
-  overflow: hidden;
+  padding: clamp(10px, 2.2vw, 20px) clamp(10px, 3vw, 60px);
+  overflow: auto;
   box-sizing: border-box;
   align-items: center;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.board-layout {
+  width: max-content;
+  min-width: var(--board-width);
 }
 
 .top-area {
@@ -126,7 +138,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-  width: min(100%, var(--board-width));
+  width: var(--board-width);
   margin: 0 auto 20px;
 }
 
@@ -138,6 +150,7 @@
 .stock,
 .waste {
   position: relative;
+  flex: 0 0 var(--card-width);
   width: var(--card-width);
   height: var(--card-height);
 }
@@ -159,6 +172,7 @@
 }
 
 .foundation {
+  flex: 0 0 var(--card-width);
   width: var(--card-width);
   height: var(--card-height);
   border: 2px dashed rgba(255, 255, 255, 0.5);
@@ -170,15 +184,16 @@
 
 .tableau {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--tableau-gap);
   flex: 1;
-  width: min(100%, var(--board-width));
+  width: var(--board-width);
   margin: 0 auto;
 }
 
 .tableau-pile {
   position: relative;
+  flex: 0 0 var(--card-width);
   width: var(--card-width);
   min-height: var(--card-height);
 }
@@ -208,13 +223,46 @@
   font-weight: bold;
   user-select: none;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.1s, box-shadow 0.1s, opacity 0.1s;
   font-family: 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
+}
+
+.card.is-draggable {
+  touch-action: none;
+}
+
+.card.is-dragging {
+  opacity: 0.18;
+}
+
+.card.is-selected {
+  box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.95), 0 8px 18px rgba(0, 0, 0, 0.38);
 }
 
 .card:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.drag-preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.drag-preview .card {
+  opacity: 1;
+  transform: rotate(2deg) scale(1.03);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+.drag-preview .card:hover,
+.drag-preview .card.is-dragging {
+  opacity: 1;
+  transform: rotate(2deg) scale(1.03);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
 }
 
 .card-back:hover {
@@ -266,7 +314,7 @@
   flex-direction: row;
   align-items: center;
   gap: 5px;
-  font-size: 0.65rem;
+  font-size: clamp(9px, calc(var(--card-width) * 0.16), 11px);
   line-height: 0.8;
 }
 
@@ -285,23 +333,23 @@
 
 .card-rank {
   font-weight: bold;
-  font-size: 0.7rem;
+  font-size: clamp(10px, calc(var(--card-width) * 0.17), 12px);
 }
 
 .card-rank-large {
-  font-size: 1.5rem;
+  font-size: clamp(13px, calc(var(--card-width) * 0.36), 24px);
 }
 
 .card-suit {
-  font-size: 0.8rem;
+  font-size: clamp(10px, calc(var(--card-width) * 0.2), 13px);
 }
 
 .card-suit-large {
-  font-size: 1.3rem;
+  font-size: clamp(12px, calc(var(--card-width) * 0.3), 21px);
 }
 
 .card-center {
-  font-size: 2.5rem;
+  font-size: clamp(18px, calc(var(--card-width) * 0.58), 40px);
   opacity: 0.8;
 }
 
@@ -412,4 +460,66 @@
 
 .modal-close:hover {
   background-color: #45a049;
+}
+
+@media (max-width: 900px) {
+  .top-area {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .stock-waste {
+    gap: 10px;
+  }
+
+  .foundations {
+    margin-left: 0;
+    display: grid;
+    grid-template-columns: repeat(4, var(--card-width));
+    gap: 6px;
+  }
+
+  .app-header {
+    padding: 12px;
+  }
+
+  .header-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .game-board {
+    padding: 12px;
+  }
+
+  .top-area {
+    gap: 8px;
+  }
+
+  .stats-grid {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .header-meta,
+  .turn-count,
+  .version,
+  .game-id-link {
+    font-size: 0.85rem;
+  }
+
+  .btn-new-game,
+  .btn-undo,
+  .btn-stats {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
 }
