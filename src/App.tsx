@@ -9,6 +9,7 @@ import pkg from '../package.json';
 interface Stats {
   gamesPlayed: number;
   gamesWon: number;
+  totalTurns: number;
 }
 
 const STATS_KEY = '2klondike-stats';
@@ -16,9 +17,16 @@ const STATS_KEY = '2klondike-stats';
 function loadStats(): Stats {
   try {
     const raw = localStorage.getItem(STATS_KEY);
-    if (raw) return JSON.parse(raw) as Stats;
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<Stats>;
+      return {
+        gamesPlayed: parsed.gamesPlayed ?? 0,
+        gamesWon: parsed.gamesWon ?? 0,
+        totalTurns: parsed.totalTurns ?? 0,
+      };
+    }
   } catch { /* ignore */ }
-  return { gamesPlayed: 0, gamesWon: 0 };
+  return { gamesPlayed: 0, gamesWon: 0, totalTurns: 0 };
 }
 
 function saveStats(stats: Stats): void {
@@ -40,6 +48,7 @@ function App(): React.ReactElement {
   const [stats, setStats] = useState<Stats>(loadStats);
   const [statsOpen, setStatsOpen] = useState(false);
   const wonRecorded = useRef(false);
+  const turnsThisGame = history.length;
 
   useEffect(() => {
     setIsWon(hasWon(game));
@@ -49,12 +58,16 @@ function App(): React.ReactElement {
     if (isWon && !wonRecorded.current) {
       wonRecorded.current = true;
       setStats(prev => {
-        const next = { gamesPlayed: prev.gamesPlayed + 1, gamesWon: prev.gamesWon + 1 };
+        const next = {
+          gamesPlayed: prev.gamesPlayed + 1,
+          gamesWon: prev.gamesWon + 1,
+          totalTurns: prev.totalTurns + turnsThisGame,
+        };
         saveStats(next);
         return next;
       });
     }
-  }, [isWon]);
+  }, [isWon, turnsThisGame]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -132,7 +145,11 @@ function App(): React.ReactElement {
   const handleNewGame = useCallback(() => {
     if (history.length > 0 && !isWon) {
       setStats(prev => {
-        const next = { ...prev, gamesPlayed: prev.gamesPlayed + 1 };
+        const next = {
+          ...prev,
+          gamesPlayed: prev.gamesPlayed + 1,
+          totalTurns: prev.totalTurns + history.length,
+        };
         saveStats(next);
         return next;
       });
@@ -199,10 +216,20 @@ function App(): React.ReactElement {
                 <span className="stat-label">Won</span>
               </div>
               <div className="stat">
+                <span className="stat-value">{stats.totalTurns}</span>
+                <span className="stat-label">Total Turns</span>
+              </div>
+              <div className="stat">
                 <span className="stat-value">
                   {stats.gamesPlayed === 0 ? '—' : `${Math.round((stats.gamesWon / stats.gamesPlayed) * 100)}%`}
                 </span>
                 <span className="stat-label">Win Rate</span>
+              </div>
+              <div className="stat">
+                <span className="stat-value">
+                  {stats.gamesPlayed === 0 ? '—' : (stats.totalTurns / stats.gamesPlayed).toFixed(1)}
+                </span>
+                <span className="stat-label">Turns / Game</span>
               </div>
             </div>
             <button className="modal-close" onClick={() => setStatsOpen(false)}>Close</button>
@@ -235,7 +262,7 @@ function App(): React.ReactElement {
               v{pkg.version}
             </a>
             <span className="meta-separator">·</span>
-            <span className="turn-count">Turn: {history.length}</span>
+            <span className="turn-count">Turn: {turnsThisGame}</span>
           </div>
           <div className="seed-info">
             <a
