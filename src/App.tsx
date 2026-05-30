@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import './App.css';
 import CardComponent from './components/Card';
 import { initializeGame, moveCard, canMoveToFoundation, hasWon } from './gameLogic';
@@ -6,24 +6,55 @@ import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
 import pkg from '../package.json';
 
+interface Stats {
+  gamesPlayed: number;
+  gamesWon: number;
+}
 
+const STATS_KEY = '2klondike-stats';
+
+function loadStats(): Stats {
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    if (raw) return JSON.parse(raw) as Stats;
+  } catch { /* ignore */ }
+  return { gamesPlayed: 0, gamesWon: 0 };
+}
+
+function saveStats(stats: Stats): void {
+  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+}
+
+// Create deep clone of game state for history snapshots.
+function cloneGame(g: GameState): GameState {
+  return structuredClone(g) as GameState;
+}
 
 // Main App component
 function App(): React.ReactElement {
-  // Create deep clone of game state for history snapshots.
-  const cloneGame = (g: GameState): GameState => {
-    return structuredClone(g) as GameState;
-  };
-
   const [game, setGame] = useState<GameState>(() => initializeGame());
   const [history, setHistory] = useState<GameState[]>([]);
   const [isWon, setIsWon] = useState(false);
 
   const [copied, setCopied] = useState<boolean>(false);
+  const [stats, setStats] = useState<Stats>(loadStats);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const wonRecorded = useRef(false);
 
   useEffect(() => {
     setIsWon(hasWon(game));
   }, [game]);
+
+  useEffect(() => {
+    if (isWon && !wonRecorded.current) {
+      wonRecorded.current = true;
+      setStats(prev => {
+        const next = { gamesPlayed: prev.gamesPlayed + 1, gamesWon: prev.gamesWon + 1 };
+        saveStats(next);
+        return next;
+      });
+    }
+  }, [isWon]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,11 +130,19 @@ function App(): React.ReactElement {
   }, [game]);
 
   const handleNewGame = useCallback(() => {
+    if (history.length > 0 && !isWon) {
+      setStats(prev => {
+        const next = { ...prev, gamesPlayed: prev.gamesPlayed + 1 };
+        saveStats(next);
+        return next;
+      });
+    }
+    wonRecorded.current = false;
     const newGame = initializeGame();
     setGame(newGame);
     setHistory([]);
     applySeedToUrl(newGame.seed);
-  }, [applySeedToUrl]);
+  }, [applySeedToUrl, history.length, isWon]);
 
   const handleCopyLink = useCallback(async () => {
     const basePath = '/2klondike';
@@ -146,11 +185,47 @@ function App(): React.ReactElement {
   return (
     <div className="app">
       {isWon && <Confetti />}
+      {statsOpen && (
+        <div className="modal-overlay" onClick={() => setStatsOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Stats</h2>
+            <div className="stats-grid">
+              <div className="stat">
+                <span className="stat-value">{stats.gamesPlayed}</span>
+                <span className="stat-label">Played</span>
+              </div>
+              <div className="stat">
+                <span className="stat-value">{stats.gamesWon}</span>
+                <span className="stat-label">Won</span>
+              </div>
+              <div className="stat">
+                <span className="stat-value">
+                  {stats.gamesPlayed === 0 ? '—' : `${Math.round((stats.gamesWon / stats.gamesPlayed) * 100)}%`}
+                </span>
+                <span className="stat-label">Win Rate</span>
+              </div>
+            </div>
+            <button className="modal-close" onClick={() => setStatsOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
       <header className="app-header">
-        {/* App Header: title, subtitle, version, turn count, undo, new game, game ID */}
-        <div className="title-section">
+        <div className="header-row">
           <h1>Double Klondike</h1>
-          <div className="subtitle">
+          <div className="header-actions">
+            <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
+              Undo
+            </button>
+            <button onClick={handleNewGame} className="btn-new-game">
+              New Game
+            </button>
+            <button onClick={() => setStatsOpen(true)} className="btn-stats">
+              Stats
+            </button>
+          </div>
+        </div>
+        <div className="header-row">
+          <div className="header-meta">
             <a
               href="https://github.com/sean5446/2klondike/activity"
               className="version"
@@ -159,17 +234,8 @@ function App(): React.ReactElement {
             >
               v{pkg.version}
             </a>
-            <p className="turn-count">Turn count: {history.length}</p>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="header-buttons">
-            <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
-              Undo
-            </button>
-            <button onClick={handleNewGame} className="btn-new-game">
-              New Game
-            </button>
+            <span className="meta-separator">·</span>
+            <span className="turn-count">Turn: {history.length}</span>
           </div>
           <div className="seed-info">
             <a
@@ -178,7 +244,7 @@ function App(): React.ReactElement {
               className="game-id-link"
               title="Click to copy shareable link"
             >
-              Game ID: {game.seed}
+              Game ID: {game.seed} <span aria-hidden="true">⧉</span>
             </a>
             {copied && (
               <span className="copy-toast" role="status" aria-live="polite">Copied game URL!</span>
