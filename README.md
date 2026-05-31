@@ -8,7 +8,7 @@ https://sean5446.github.io/2klondike/
 
 ## Running Locally
 
-**Prerequisites:** Node.js 22+
+**Prerequisites:** Node.js 24+
 
 ```bash
 npm install
