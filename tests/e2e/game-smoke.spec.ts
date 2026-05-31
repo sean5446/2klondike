@@ -5,34 +5,27 @@ interface FoundationMove {
   foundationIndex: number;
 }
 
-async function findSeedWithAceMove(page: Page): Promise<{ seed: number; move: FoundationMove }> {
-  for (let seed = 1; seed <= 120; seed++) {
-    await page.goto(`/?${seed}`);
-
-    const fromPile = await page.evaluate(() => {
-      const piles = Array.from(document.querySelectorAll<HTMLElement>('.tableau-pile'));
-      for (let index = 0; index < piles.length; index++) {
-        const cards = Array.from(piles[index].querySelectorAll<HTMLElement>('.card-face'));
-        const top = cards[cards.length - 1];
-        if (top?.dataset.rank === 'A') {
-          return index;
-        }
+async function findTopTableauAce(page: Page): Promise<FoundationMove> {
+  const fromPile = await page.evaluate(() => {
+    const piles = Array.from(document.querySelectorAll<HTMLElement>('.tableau-pile'));
+    for (let index = 0; index < piles.length; index++) {
+      const cards = Array.from(piles[index].querySelectorAll<HTMLElement>('.card-face'));
+      const top = cards[cards.length - 1];
+      if (top?.dataset.rank === 'A') {
+        return index;
       }
-      return -1;
-    });
-
-    if (fromPile >= 0) {
-      return {
-        seed,
-        move: {
-          fromPile,
-          foundationIndex: 0,
-        },
-      };
     }
+    return -1;
+  });
+
+  if (fromPile < 0) {
+    throw new Error('Unable to find a top-row ace for the provided seed');
   }
 
-  throw new Error('Unable to find a seed with a top-row ace in first 120 seeds');
+  return {
+    fromPile,
+    foundationIndex: 0,
+  };
 }
 
 test.describe('Double Klondike smoke tests', () => {
@@ -109,92 +102,49 @@ test.describe('Double Klondike smoke tests', () => {
     expect(after).not.toBe(before);
   });
 
-  test.skip('desktop drag/drop moves ace to foundation', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'Desktop drag/drop is validated in desktop Chromium only.');
+  test('ace moves to foundation using primary interaction (seed 649728)', async ({ page }, testInfo) => {
 
-    const { move } = await findSeedWithAceMove(page);
+    await page.goto('/?649728');
+    await expect(page.getByText('Game ID: 649728')).toBeVisible();
 
-    await page.evaluate(({ fromPile, foundationIndex }) => {
-      const sourceCards = Array.from(document.querySelectorAll<HTMLElement>(`.tableau-pile[data-drop-index="${fromPile}"] .card-face`));
-      const source = sourceCards[sourceCards.length - 1];
-      const target = document.querySelector<HTMLElement>(`.foundation[data-drop-index="${foundationIndex}"]`);
-      if (!source || !target) {
-        throw new Error('Missing source or target for desktop pointer drag test');
-      }
+    const move = await findTopTableauAce(page);
+    const sourceCard = page.locator(`.tableau-pile[data-drop-index="${move.fromPile}"] .card-face`).last();
+    const foundationTarget = page.locator(`.foundation[data-drop-index="${move.foundationIndex}"]`);
 
-      const sourceRect = source.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-
-      const startX = sourceRect.left + sourceRect.width / 2;
-      const startY = sourceRect.top + sourceRect.height / 2;
-      const endX = targetRect.left + targetRect.width / 2;
-      const endY = targetRect.top + targetRect.height / 2;
-
-      source.dispatchEvent(new PointerEvent('pointerdown', {
-        pointerId: 101,
-        pointerType: 'mouse',
-        button: 0,
-        buttons: 1,
-        clientX: startX,
-        clientY: startY,
-        bubbles: true,
-        cancelable: true,
-      }));
-
-      window.dispatchEvent(new PointerEvent('pointermove', {
-        pointerId: 101,
-        pointerType: 'mouse',
-        button: 0,
-        buttons: 1,
-        clientX: endX,
-        clientY: endY,
-        bubbles: true,
-        cancelable: true,
-      }));
-
-      target.dispatchEvent(new PointerEvent('pointerup', {
-        pointerId: 101,
-        pointerType: 'mouse',
-        button: 0,
-        buttons: 0,
-        clientX: endX,
-        clientY: endY,
-        bubbles: true,
-        cancelable: true,
-      }));
-    }, move);
+    if (testInfo.project.name === 'mobile-chromium') {
+      await sourceCard.dragTo(foundationTarget);
+    } else {
+      await sourceCard.dblclick();
+    }
 
     await expect(page.getByText('Turn: 1')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
+
+    const foundationCardCount = await page.evaluate(() => {
+      const foundationCards = document.querySelectorAll('.foundation .card-face');
+      return foundationCards.length;
+    });
+    expect(foundationCardCount).toBe(1);
   });
 
-  test.skip('mobile touch drag/drop moves ace to foundation', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'mobile-chromium', 'Touch drag/drop is validated in mobile Chromium only.');
+  test('drag/drop moves ace to foundation (seed 649728)', async ({ page }) => {
 
-    const { move } = await findSeedWithAceMove(page);
+    await page.goto('/?649728');
+    await expect(page.getByText('Game ID: 649728')).toBeVisible();
 
-    const points = await page.evaluate(({ fromPile, foundationIndex }) => {
-      const sourceCards = Array.from(document.querySelectorAll<HTMLElement>(`.tableau-pile[data-drop-index="${fromPile}"] .card-face`));
-      const source = sourceCards[sourceCards.length - 1];
-      const target = document.querySelector<HTMLElement>(`.foundation[data-drop-index="${foundationIndex}"]`);
-      if (!source || !target) {
-        throw new Error('Missing source or target for touch drag test');
-      }
+    const move = await findTopTableauAce(page);
 
-      const sourceRect = source.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-
-      const startX = sourceRect.left + sourceRect.width / 2;
-      const startY = sourceRect.top + sourceRect.height / 2;
-      const endX = targetRect.left + targetRect.width / 2;
-      const endY = targetRect.top + targetRect.height / 2;
-      return { startX, startY, endX, endY };
-    }, move);
-
-    await page.touchscreen.tap(points.startX, points.startY);
-    await page.touchscreen.tap(points.endX, points.endY);
+    const sourceCard = page.locator(`.tableau-pile[data-drop-index="${move.fromPile}"] .card-face`).last();
+    const foundationTarget = page.locator(`.foundation[data-drop-index="${move.foundationIndex}"]`);
+    await sourceCard.dragTo(foundationTarget);
 
     await expect(page.getByText('Turn: 1')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
+
+    const foundationCardCount = await page.evaluate(() => {
+      const foundationCards = document.querySelectorAll('.foundation .card-face');
+      return foundationCards.length;
+    });
+    expect(foundationCardCount).toBe(1);
   });
 });
