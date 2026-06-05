@@ -86,7 +86,7 @@ test.describe('Double Klondike smoke tests', () => {
     await expect(page.getByRole('heading', { name: 'Stats' })).not.toBeVisible();
   });
 
-  test('new game changes game id and resets turn', async ({ page }) => {
+  test('new game prompts after a turn and resets on confirm', async ({ page }) => {
     await page.goto('/?400');
 
     const gameId = page.locator('.game-id-link');
@@ -94,6 +94,22 @@ test.describe('Double Klondike smoke tests', () => {
 
     await page.locator('.stock .card').click();
     await expect(page.getByText('Turn: 1')).toBeVisible();
+
+    page.once('dialog', async dialog => {
+      expect(dialog.message()).toContain('A turn has been played. Start a new game?');
+      await dialog.dismiss();
+    });
+
+    await page.getByRole('button', { name: 'New Game' }).click();
+
+    await expect(page.getByText('Turn: 1')).toBeVisible();
+    const afterCancel = (await gameId.innerText()).trim();
+    expect(afterCancel).toBe(before);
+
+    page.once('dialog', async dialog => {
+      expect(dialog.message()).toContain('A turn has been played. Start a new game?');
+      await dialog.accept();
+    });
 
     await page.getByRole('button', { name: 'New Game' }).click();
 

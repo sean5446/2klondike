@@ -280,6 +280,13 @@ function App(): React.ReactElement {
   }, [clearPointerDrag, game]);
 
   const handleNewGame = useCallback(() => {
+    if (history.length > 0) {
+      const shouldStartNewGame = window.confirm('A turn has been played. Start a new game?');
+      if (!shouldStartNewGame) {
+        return;
+      }
+    }
+
     if (history.length > 0 && !isWon) {
       setStats(prev => {
         const next = {
