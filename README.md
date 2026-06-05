@@ -21,6 +21,8 @@ Then open the local URL shown in the terminal (e.g. `http://localhost:5173`).
 
 The project includes browser-level smoke tests for core UI gameplay flows.
 
+649728 is a winnable game to test with
+
 Run once locally:
 
 ```bash
