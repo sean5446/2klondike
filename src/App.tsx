@@ -15,6 +15,7 @@ import {
 } from './gameLogic';
 import { GameState, Card } from './types';
 import Confetti from 'react-confetti';
+import { drawPlayingCardShape } from './confetti';
 import pkg from '../package.json';
 
 interface Stats {
@@ -346,7 +347,7 @@ function App(): React.ReactElement {
 
   return (
     <div className={`app ${pointerDrag ? 'is-pointer-dragging' : ''}`} onPointerMoveCapture={handleGlobalPointerMove} onPointerUpCapture={handleGlobalPointerUp} onPointerCancelCapture={handleGlobalPointerUp}>
-      {isWon && <Confetti />}
+      {isWon && <Confetti drawShape={drawPlayingCardShape} />}
       {statsOpen && (
         <div className="modal-overlay" onClick={() => setStatsOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
