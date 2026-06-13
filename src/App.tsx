@@ -74,6 +74,8 @@ function App(): React.ReactElement {
   const [statsOpen, setStatsOpen] = useState(false);
   const wonRecorded = useRef(false);
   const pointerDragRef = useRef<PointerDragState | null>(null);
+  const titleTapCountRef = useRef(0);
+  const titleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const turnsThisGame = history.length;
   const draggedCard = pointerDrag ? findCardById(game, pointerDrag.cardId) : null;
 
@@ -96,14 +98,21 @@ function App(): React.ReactElement {
     }
   }, [isWon, turnsThisGame]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'w' && e.ctrlKey && e.altKey) {
-        setIsWon(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+  const handleTitleClick = useCallback(() => {
+    titleTapCountRef.current += 1;
+    
+    if (titleTapTimeoutRef.current) {
+      clearTimeout(titleTapTimeoutRef.current);
+    }
+    
+    if (titleTapCountRef.current === 7) {
+      setIsWon(true);
+      titleTapCountRef.current = 0;
+    } else {
+      titleTapTimeoutRef.current = setTimeout(() => {
+        titleTapCountRef.current = 0;
+      }, 1000);
+    }
   }, []);
 
   const applySeedToUrl = useCallback((seed: number) => {
@@ -347,7 +356,7 @@ function App(): React.ReactElement {
 
   return (
     <div className={`app ${pointerDrag ? 'is-pointer-dragging' : ''}`} onPointerMoveCapture={handleGlobalPointerMove} onPointerUpCapture={handleGlobalPointerUp} onPointerCancelCapture={handleGlobalPointerUp}>
-      {isWon && <Confetti drawShape={drawPlayingCardShape} />}
+      {isWon && <Confetti drawShape={drawPlayingCardShape} numberOfPieces={52} />}
       {statsOpen && (
         <div className="modal-overlay" onClick={() => setStatsOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -384,7 +393,7 @@ function App(): React.ReactElement {
       )}
       <header className="app-header">
         <div className="header-row">
-          <h1>Double Klondike</h1>
+          <h1 onClick={handleTitleClick} style={{ cursor: 'pointer' }}>Double Klondike</h1>
           <div className="header-actions">
             <button onClick={handleUndo} className="btn-undo" disabled={history.length === 0}>
               Undo
