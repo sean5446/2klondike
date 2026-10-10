@@ -81,7 +81,7 @@ function App(): React.ReactElement {
   const draggedCard = pointerDrag ? findCardById(game, pointerDrag.cardId) : null;
 
   useEffect(() => {
-    setIsWon(hasWon(game));
+    setIsWon(prev => prev || hasWon(game));
   }, [game]);
 
   useEffect(() => {
@@ -138,6 +138,8 @@ function App(): React.ReactElement {
     const seededGame = initializeGame(parsedSeed);
     setGame(seededGame);
     setHistory([]);
+    setIsWon(false);
+    wonRecorded.current = false;
 
     // Strip the shared ID from the address bar so a page refresh (or a PWA
     // relaunch) deals a fresh game instead of replaying this one.
@@ -317,6 +319,7 @@ function App(): React.ReactElement {
     const newGame = initializeGame();
     setGame(newGame);
     setHistory([]);
+    setIsWon(false);
     clearPointerDrag();
     clearSeedFromUrl();
   }, [clearPointerDrag, clearSeedFromUrl, history.length, isWon]);

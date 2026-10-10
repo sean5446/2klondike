@@ -194,7 +194,23 @@ export const isValidSequence = (cards: Card[]): boolean => {
 };
 
 export const hasWon = (game: GameState): boolean => {
-  return game.foundations.every((pile) => pile.length === 13);
+  // The player wins once the draw pile and waste are clear, every tableau
+  // card is face up, all eight aces are on the foundations, and all eight
+  // kings remain in the tableau. The face-up tableau stacks can be finished
+  // without the player having to move them onto the foundations.
+  if (game.deck.length > 0 || game.waste.length > 0) return false;
+
+  const foundationAceCount = game.foundations.reduce(
+    (count, pile) => count + pile.filter((card) => card.rank === 'A').length,
+    0,
+  );
+  if (foundationAceCount !== 8) return false;
+
+  const tableauCards = game.tableau.flat();
+  const tableauKingCount = tableauCards.filter((card) => card.rank === 'K').length;
+  if (tableauKingCount !== 8) return false;
+
+  return tableauCards.every((card) => card.faceUp);
 };
 
 export const playDeckTurn = (game: GameState): GameState => {

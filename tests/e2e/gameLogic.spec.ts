@@ -48,22 +48,33 @@ test.describe('seeded RNG and game IDs', () => {
 
 test.describe('hasWon', () => {
   const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
-  const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-  const completedGame = (): GameState => {
+  const card = (suit: Suit, rank: Rank, faceUp = true): Card => ({
+    suit,
+    rank,
+    id: `${rank}-${suit}`,
+    faceUp,
+  });
+
+  // Win state: stock and waste empty, all eight aces on the foundations, and
+  // all eight kings face up in the tableau.
+  const winningGame = (): GameState => {
     const foundations: Card[][] = [];
     for (const suit of suits) {
-      for (let deckNum = 0; deckNum < 2; deckNum++) {
-        foundations.push(
-          ranks.map((rank) => ({ suit, rank, id: `${rank}-${suit}-${deckNum}`, faceUp: true })),
-        );
-      }
+      foundations.push([card(suit, 'A')]);
+      foundations.push([card(suit, 'A')]);
     }
+
+    const tableau: Card[][] = Array.from({ length: 9 }, () => []);
+    foundations.forEach((_, index) => {
+      tableau[index].push(card(suits[index % suits.length], 'K'));
+    });
+
     return {
       deck: [],
       waste: [],
       foundations,
-      tableau: Array.from({ length: 9 }, () => []),
+      tableau,
       selectedCard: null,
       selectedFrom: null,
       seed: 0,
@@ -71,13 +82,33 @@ test.describe('hasWon', () => {
     };
   };
 
-  test('is true when all 104 cards are on the foundations', () => {
-    expect(hasWon(completedGame())).toBe(true);
+  test('is true when stock/waste are empty, aces are home, and kings are face up in the tableau', () => {
+    expect(hasWon(winningGame())).toBe(true);
   });
 
-  test('is false until every foundation is complete', () => {
-    const game = completedGame();
-    game.foundations[0].pop();
+  test('is false when a tableau card is face down', () => {
+    const game = winningGame();
+    game.tableau[0][0].faceUp = false;
+    expect(hasWon(game)).toBe(false);
+  });
+
+  test('is false when a king has been moved out of the tableau', () => {
+    const game = winningGame();
+    const king = game.tableau[0].pop()!;
+    game.foundations[0].push(king);
+    expect(hasWon(game)).toBe(false);
+  });
+
+  test('is false while the stock still has cards', () => {
+    const game = winningGame();
+    game.deck.push(card('spades', '2'));
+    expect(hasWon(game)).toBe(false);
+  });
+
+  test('is false while the waste still has cards', () => {
+    const game = winningGame();
+    game.waste.push(card('spades', '2'));
     expect(hasWon(game)).toBe(false);
   });
 });
+
