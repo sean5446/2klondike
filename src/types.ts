@@ -16,4 +16,5 @@ export interface GameState {
   selectedCard: Card | null;
   selectedFrom: string | null;
   seed: number;
+  gameId: string;
 }

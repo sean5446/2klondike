@@ -6,6 +6,7 @@ import Foundations from './components/Foundations';
 import Tableau from './components/Tableau';
 import {
   cloneGameState,
+  decodeGameId,
   findCardById,
   findFoundationMoveIndex,
   hasWon,
@@ -115,29 +116,33 @@ function App(): React.ReactElement {
     }
   }, []);
 
-  const applySeedToUrl = useCallback((seed: number) => {
+  const clearSeedFromUrl = useCallback(() => {
     const basePath = '/2klondike';
-    const newPath = `${basePath}/?${seed}`;
-    const url = `${window.location.origin}${newPath}`;
+    const url = `${window.location.origin}${basePath}/`;
     window.history.replaceState({}, '', url);
   }, []);
 
   useEffect(() => {
-    // Expect path like /2klondike/?123
+    // Expect path like /2klondike/?aB3xK9
     const search = window.location.search;
-    const match = search.match(/^\?(\d+)$/);
-    const paramSeed = match?.[1];
-    if (!paramSeed) return;
+    const match = search.match(/^\?([0-9A-Za-z]{6})$/);
+    const paramId = match?.[1];
+    if (!paramId) return;
 
-    const parsedSeed = Number.parseInt(paramSeed, 10);
-    if (Number.isNaN(parsedSeed)) return;
+    const parsedSeed = decodeGameId(paramId);
+    if (parsedSeed === null) {
+      clearSeedFromUrl();
+      return;
+    }
 
     const seededGame = initializeGame(parsedSeed);
     setGame(seededGame);
     setHistory([]);
 
-    applySeedToUrl(seededGame.seed);
-  }, [applySeedToUrl]);
+    // Strip the shared ID from the address bar so a page refresh (or a PWA
+    // relaunch) deals a fresh game instead of replaying this one.
+    clearSeedFromUrl();
+  }, [clearSeedFromUrl]);
 
   const commitMove = useCallback((fromType: string, fromIndex: number, toType: string, toIndex: number, cardId: string): boolean => {
     // Dropping back onto the same source is a no-op and should not consume a turn.
@@ -313,12 +318,12 @@ function App(): React.ReactElement {
     setGame(newGame);
     setHistory([]);
     clearPointerDrag();
-    applySeedToUrl(newGame.seed);
-  }, [applySeedToUrl, clearPointerDrag, history.length, isWon]);
+    clearSeedFromUrl();
+  }, [clearPointerDrag, clearSeedFromUrl, history.length, isWon]);
 
   const handleCopyLink = useCallback(async () => {
     const basePath = '/2klondike';
-    const url = `${window.location.origin}${basePath}/?${game.seed}`;
+    const url = `${window.location.origin}${basePath}/?${game.gameId}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -332,7 +337,7 @@ function App(): React.ReactElement {
     }
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
-  }, [game.seed]);
+  }, [game.gameId]);
 
   const handleUndo = useCallback(() => {
     if (history.length > 0) {
@@ -421,12 +426,12 @@ function App(): React.ReactElement {
           </div>
           <div className="seed-info">
             <a
-              href={`${window.location.origin}/2klondike/?${game.seed}`}
+              href={`${window.location.origin}/2klondike/?${game.gameId}`}
               onClick={(e) => { e.preventDefault(); handleCopyLink(); }}
               className="game-id-link"
               title="Click to copy shareable link"
             >
-              Game ID: {game.seed} <span aria-hidden="true">⧉</span>
+              Game ID: {game.gameId} <span aria-hidden="true">⧉</span>
             </a>
             {copied && (
               <span className="copy-toast" role="status" aria-live="polite">Copied game URL!</span>

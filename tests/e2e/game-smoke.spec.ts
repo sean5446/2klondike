@@ -30,18 +30,18 @@ async function findTopTableauAce(page: Page): Promise<FoundationMove> {
 
 test.describe('Double Klondike smoke tests', () => {
   test('renders core controls and header info', async ({ page }) => {
-    await page.goto('/?12345');
+    await page.goto('/?000123');
 
     await expect(page.getByRole('heading', { name: 'Double Klondike' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'New Game' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Stats' })).toBeVisible();
-    await expect(page.getByText('Game ID: 12345')).toBeVisible();
+    await expect(page.getByText('Game ID: 000123')).toBeVisible();
     await expect(page.getByText('Turn: 0')).toBeVisible();
   });
 
   test('drawing from stock increments turn and enables undo', async ({ page }) => {
-    await page.goto('/?100');
+    await page.goto('/?000100');
 
     const stockCount = page.locator('.stock-count');
     const undoButton = page.getByRole('button', { name: 'Undo' });
@@ -62,7 +62,7 @@ test.describe('Double Klondike smoke tests', () => {
   });
 
   test('undo restores previous state after drawing from stock', async ({ page }) => {
-    await page.goto('/?200');
+    await page.goto('/?000200');
 
     const stockCount = page.locator('.stock-count');
     const initialStock = Number.parseInt(await stockCount.innerText(), 10);
@@ -76,7 +76,7 @@ test.describe('Double Klondike smoke tests', () => {
   });
 
   test('stats modal opens and closes', async ({ page }) => {
-    await page.goto('/?300');
+    await page.goto('/?000300');
 
     await page.getByRole('button', { name: 'Stats' }).click();
     await expect(page.getByRole('heading', { name: 'Stats' })).toBeVisible();
@@ -87,7 +87,7 @@ test.describe('Double Klondike smoke tests', () => {
   });
 
   test('new game prompts after a turn and resets on confirm', async ({ page }) => {
-    await page.goto('/?400');
+    await page.goto('/?000400');
 
     const gameId = page.locator('.game-id-link');
     const before = (await gameId.innerText()).trim();
@@ -118,10 +118,20 @@ test.describe('Double Klondike smoke tests', () => {
     expect(after).not.toBe(before);
   });
 
-  test('ace moves to foundation using primary interaction (seed 649728)', async ({ page }, testInfo) => {
+  test('loading a shared ID clears the URL so reload deals a new game', async ({ page }) => {
+    await page.goto('/?000001');
+    await expect(page.getByText('Game ID: 000001')).toBeVisible();
 
-    await page.goto('/?649728');
-    await expect(page.getByText('Game ID: 649728')).toBeVisible();
+    expect(new URL(page.url()).search).toBe('');
+
+    await page.reload();
+    await expect(page.getByText('Game ID: 000001')).toHaveCount(0);
+  });
+
+  test('ace moves to foundation using primary interaction (game 000001)', async ({ page }, testInfo) => {
+
+    await page.goto('/?000001');
+    await expect(page.getByText('Game ID: 000001')).toBeVisible();
 
     const move = await findTopTableauAce(page);
     const sourceCard = page.locator(`.tableau-pile[data-drop-index="${move.fromPile}"] .card-face`).last();
@@ -143,10 +153,10 @@ test.describe('Double Klondike smoke tests', () => {
     expect(foundationCardCount).toBe(1);
   });
 
-  test('drag/drop moves ace to foundation (seed 649728)', async ({ page }) => {
+  test('drag/drop moves ace to foundation (game 000001)', async ({ page }) => {
 
-    await page.goto('/?649728');
-    await expect(page.getByText('Game ID: 649728')).toBeVisible();
+    await page.goto('/?000001');
+    await expect(page.getByText('Game ID: 000001')).toBeVisible();
 
     const move = await findTopTableauAce(page);
 

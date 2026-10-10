@@ -1,12 +1,53 @@
-import { Card, GameState, Suit, Rank } from './types';
+import type { Card, GameState, Suit, Rank } from './types';
 
-// Seeded random number generator
+// Seeded random number generator (mulberry32). It has a 32-bit state, unlike
+// the previous LCG whose 233280-value state space caused many game IDs to map
+// to the same deck.
 export const seededRandom = (seed: number) => {
-  let x = seed;
+  let a = seed >>> 0;
   return () => {
-    x = (x * 9301 + 49297) % 233280;
-    return x / 233280;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+};
+
+// Generates a random 32-bit seed, preferring a cryptographic source.
+export const randomSeed = (): number => {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    return crypto.getRandomValues(new Uint32Array(1))[0];
+  }
+  return Math.floor(Math.random() * 0x100000000);
+};
+
+// Game IDs are a fixed-width base62 (0-9A-Za-z) encoding of the 32-bit seed.
+// 62^6 > 2^32 so every seed round-trips through exactly six characters.
+const ID_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const ID_LENGTH = 6;
+
+export const encodeGameId = (seed: number): string => {
+  let n = seed >>> 0;
+  let id = '';
+  for (let i = 0; i < ID_LENGTH; i++) {
+    id = ID_ALPHABET[n % ID_ALPHABET.length] + id;
+    n = Math.floor(n / ID_ALPHABET.length);
+  }
+  return id;
+};
+
+export const decodeGameId = (id: string): number | null => {
+  if (!new RegExp(`^[0-9A-Za-z]{${ID_LENGTH}}$`).test(id)) return null;
+  let n = 0;
+  for (const char of id) {
+    const index = ID_ALPHABET.indexOf(char);
+    if (index === -1) return null;
+    n = n * ID_ALPHABET.length + index;
+  }
+  const seed = n >>> 0;
+  // Only accept canonical IDs (those the encoder could have produced), so a
+  // hand-typed ID that overflows 32 bits isn't silently mapped to another game.
+  return encodeGameId(seed) === id ? seed : null;
 };
 
 // Utility functions
@@ -42,7 +83,7 @@ export const createDeck = (numDecks: number = 1, rng?: () => number): Card[] => 
 };
 
 export const initializeGame = (seed?: number): GameState => {
-  const actualSeed = seed ?? Math.floor(Math.random() * 1000000);
+  const actualSeed = (seed ?? randomSeed()) >>> 0;
   const rng = seededRandom(actualSeed);
   const deck = createDeck(2, rng);
   const tableau: Card[][] = [];
@@ -66,6 +107,7 @@ export const initializeGame = (seed?: number): GameState => {
     selectedCard: null,
     selectedFrom: null,
     seed: actualSeed,
+    gameId: encodeGameId(actualSeed),
   };
 };
 
@@ -152,18 +194,7 @@ export const isValidSequence = (cards: Card[]): boolean => {
 };
 
 export const hasWon = (game: GameState): boolean => {
-  const deckEmpty = game.deck.length === 0;
-  const wasteEmpty = game.waste.length === 0;
-
-  const foundationAceCount = game.foundations.reduce((count, pile) =>
-    count + pile.filter(card => card.rank === 'A').length,
-  0);
-
-  const tableauKingCount = game.tableau.reduce((count, pile) =>
-    count + pile.filter(card => card.rank === 'K').length,
-  0);
-
-  return deckEmpty && wasteEmpty && foundationAceCount === 8 && tableauKingCount === 8;
+  return game.foundations.every((pile) => pile.length === 13);
 };
 
 export const playDeckTurn = (game: GameState): GameState => {
